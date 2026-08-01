@@ -249,7 +249,9 @@
         </div>
     </div>
 
-    <script>
+    <div id="clearModal" class="modal"><div class="modal-content"><h3>Student Name</h3><input type="text" id="studentName" placeholder="Enter Your Name" maxlength="10" style="width:90%;padding:12px;border:1px solid #ccc;border-radius:8px;margin:10px 0;"><br><button onclick="submitClear()">Submit</button><button onclick="closeClearModal()">Cancel</button></div></div>
+
+<script>
 
         let st = JSON.parse(localStorage.omr || "{}");
 
@@ -290,11 +292,11 @@ ${[1, 2, 3, 4].map(v => `
                 inp.onclick = function () {
 
                     if (this.name.startsWith("r")) {
-                        let qNo=this.name.substring(1);
-                        let ans=document.querySelector('input[name="a'+qNo+'"]:checked');
-                        if(!ans){
+                        let qNo = this.name.substring(1);
+                        let ans = document.querySelector('input[name="a' + qNo + '"]:checked');
+                        if (!ans) {
                             alert("Please select option (1,2,3 or 4) first.");
-                            this.checked=false;
+                            this.checked = false;
                             return;
                         }
                     }
@@ -305,9 +307,9 @@ ${[1, 2, 3, 4].map(v => `
                         this.dataset.checked = "false";
                         delete st[this.name];
                         if (this.name.startsWith("a")) {
-                            let qNo=this.name.substring(1);
-                            document.querySelectorAll('input[name="r'+qNo+'"]').forEach(r=>{r.checked=false;r.dataset.checked="false";});
-                            delete st["r"+qNo];
+                            let qNo = this.name.substring(1);
+                            document.querySelectorAll('input[name="r' + qNo + '"]').forEach(r => { r.checked = false; r.dataset.checked = "false"; });
+                            delete st["r" + qNo];
                         }
                         localStorage.omr = JSON.stringify(st);
                         paint(i);
@@ -345,22 +347,37 @@ ${[1, 2, 3, 4].map(v => `
 
 
         let historyData = JSON.parse(localStorage.omrHistory || "[]");
-        function saveHistory(a, r, w, not, acc) {
-            historyData.push({ test: historyData.length + 1, date: new Date().toLocaleDateString('en-GB'), attempted: a, right: r, wrong: w, not: not, accuracy: acc + "%" });
+        function saveHistory(name,a, r, w, not, acc) {
+            historyData.unshift({ test: historyData.length + 1, name:name, date: new Date().toLocaleDateString('en-GB'), attempted: a, right: r, wrong: w, not: not, accuracy: acc + "%" });
             localStorage.omrHistory = JSON.stringify(historyData);
         }
 
 
         function historyView() {
-            document.body.insertAdjacentHTML('beforeend', `<div class="password-overlay" id="pwdBox"><div class="password-box"><h3>History Login</h3><input type="password" id="hpwd" placeholder="Enter Password"><br><button onclick="checkHistoryPassword()">Open History</button><p id="perr" style="color:red"></p></div></div>`);
+            document.body.insertAdjacentHTML('beforeend', `<div class="password-overlay" id="pwdBox"><div class="password-box" style="position:relative;"><span onclick="document.getElementById('pwdBox').remove()" style="position:absolute;right:12px;top:8px;font-size:24px;cursor:pointer;">&times;</span><h3>History Login</h3><div style="position:relative;width:90%;max-width:260px;margin:10px auto;"><input type="password" id="hpwd" placeholder="Enter Password" style="width:100%;display:block;padding:10px;padding-right:45px;box-sizing:border-box;"><span onclick="let p=document.getElementById('hpwd');p.type=(p.type==='password')?'text':'password';this.innerHTML=(p.type==='password')?'👁':'🙈';" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:20px;user-select:none;z-index:2;">👁</span></div><button onclick="checkHistoryPassword()">Open History</button><p id="perr" style="color:red"></p></div></div>`);
+            document.getElementById('hpwd').addEventListener('keypress', function(e){
+                if(e.key === 'Enter'){ checkHistoryPassword(); }
+            });
         }
         function checkHistoryPassword() {
             if (document.getElementById('hpwd').value !== "5969") { document.getElementById('perr').innerText = "Wrong Password"; return; }
             document.getElementById('pwdBox').remove();
             let h = JSON.parse(localStorage.omrHistory || "[]");
-            let html = `<h2>History</h2><table border="1" cellpadding="6"><tr><th>Test</th><th>Date</th><th>Attempted</th><th>Right</th><th>Wrong</th><th>Not</th><th>Accuracy</th><th>Action</th></tr>`;
-            h.forEach((x, i) => html += `<tr><td>${x.test}</td><td>${x.date}</td><td>${x.attempted}</td><td>${x.right}</td><td>${x.wrong}</td><td>${x.not}</td><td>${x.accuracy}</td><td><button onclick="deleteHistory(${i})">Delete</button></td></tr>`);
-            html += "</table><br><button onclick='location.reload()'>Back</button>";
+            let html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><button onclick="location.reload()">← Back</button><div style="flex:1;text-align:center;font-size:28px;font-weight:bold">History</div><div style="width:90px"></div></div>';
+            if (window.innerWidth <= 768) {
+                h.forEach((x, i) => {
+                    html += `<div style="max-width:420px;margin:15px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.12);border:1px solid #e5e7eb">
+<div style="background:linear-gradient(135deg,#4f8dfd,#6aa8ff);color:#fff;display:flex;justify-content:space-between;padding:14px 16px;font-weight:bold"><span>Test #${x.test}</span><span>${x.date}</span></div>
+<div style="padding:16px;line-height:2">
+<div>Name : <b>${x.name || "-"}</b></div><div>Attempted : <b>${x.attempted}</b></div><div>Right : <b>${x.right}</b></div><div>Wrong : <b>${x.wrong}</b></div><div>Not : <b>${x.not}</b></div><div>Accuracy : <b>${x.accuracy}</b></div></div>
+<div style="padding:12px;text-align:right;background:#fafafa"><button onclick="deleteHistory(${i})">🗑 Delete</button></div></div>`
+                });
+            } else {
+                html += `<table style="width:100%;border-collapse:collapse;font-family:Arial;box-shadow:0 4px 12px rgba(0,0,0,.12)"><tr style="background:#4f8dfd;color:#fff"><th>Test</th><th>Date</th><th>Attempted</th><th>Right</th><th>Wrong</th><th>Not</th><th>Accuracy</th><th>Action</th></tr>`;
+                h.forEach((x, i) => html += `<tr><td>${x.test}</td><td>${x.date}</td><td>${x.attempted}</td><td>${x.right}</td><td>${x.wrong}</td><td>${x.not}</td><td>${x.accuracy}</td><td><button onclick="deleteHistory(${i})">Delete</button></td></tr>`);
+                html += '</table>';
+            }
+
             document.body.innerHTML = html;
         }
 
@@ -420,19 +437,9 @@ ${[1, 2, 3, 4].map(v => `
 
         }
 
-        function clr() {
-            if (confirm("Clear?")) {
-                let a = 0, r = 0, w = 0;
-                for (let i = 1; i <= 100; i++) { if (st["a" + i]) a++; if (st["r" + i] == "R") r++; if (st["r" + i] == "W") w++; }
-                let not = 100 - a;
-                let acc = a ? ((r / a) * 100).toFixed(2) : 0;
-                saveHistory(a, r, w, not, acc);
-                localStorage.removeItem("omr");
-                location.reload();
-
-            }
-
-        }
+        function clr(){document.getElementById("clearModal").style.display="block";}
+function closeClearModal(){document.getElementById("clearModal").style.display="none";}
+function submitClear(){let name=document.getElementById("studentName").value.trim(); if(!name){alert("Please Enter Your Name");return;} if(name.length<3){alert("Name must be at least 3 characters");return;} if(name.length>10){alert("Name must be maximum 10 characters");return;} let a=0,r=0,w=0; for(let i=1;i<=100;i++){if(st["a"+i])a++; if(st["r"+i]=="R")r++; if(st["r"+i]=="W")w++;} let not=100-a; let acc=a?((r/a)*100).toFixed(2):0; saveHistory(name,a,r,w,not,acc); localStorage.removeItem("omr"); location.reload();}
 
     </script>
 
