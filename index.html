@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>OMR</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+        }
+
+        .q {
+            border: 1px solid #ccc;
+            padding: 8px;
+            margin: 6px;
+            border-left: 8px solid red;
+        }
+
+        .q.attempt {
+            border-left-color: green;
+        }
+
+        button {
+            background: #3e5ce2;
+            color: #fff;
+            border: none;
+            padding: 7px 17px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .top {
+            position: sticky;
+            top: 0;
+            background: #f9f7f7;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, .2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, .6);
+            z-index: 999;
+        }
+
+        .modal-content {
+            background: #fff;
+            width: 360px;
+            max-width: 90%;
+            margin: 8% auto;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* ===== NEW STYLE ===== */
+
+        .opt {
+            display: inline-block;
+            margin: 3px;
+        }
+
+        .opt input {
+            display: none;
+        }
+
+        .opt span {
+            width: 34px;
+            height: 34px;
+            border: 2px solid #444;
+            border-radius: 50%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .opt input:checked+span {
+            background: #2196F3;
+            color: white;
+            border-color: #2196F3;
+        }
+        
+    
+.password-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999}
+.password-box{background:#fff;padding:20px;border-radius:10px;width:320px;text-align:center}
+.password-box input{width:90%;padding:10px;margin:10px 0}
+
+</style>
+</head>
+
+<body>
+
+    <div class="top">
+        <div>
+            Search Q:
+            <input id="s" type="number" min="1" max="100">
+            <button onclick="go()">Go</button>
+        </div>
+
+        <div class="bar">
+            <button onclick="calc()">Calculate</button>
+            <button onclick="historyView()">History</button>
+            <button onclick="clr()">Clear</button>
+        </div>
+
+        <span id="res"></span>
+    </div>
+
+    <div id="c"></div>
+
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+
+            <span class="close" onclick="closeModal()">&times;</span>
+
+            <h2>Test Result</h2>
+
+            <p>Attempted : <b id="rAttempt"></b></p>
+
+            <p>Right : <b id="rRight"></b></p>
+
+            <p>Wrong : <b id="rWrong"></b></p>
+
+            <p>Not Attempted : <b id="rNot"></b></p>
+
+            <p>Accuracy : <b id="rAccuracy"></b></p>
+
+            <button onclick="closeModal()">Close</button>
+
+        </div>
+    </div>
+
+    <script>
+
+        let st = JSON.parse(localStorage.omr || "{}");
+
+        let c = document.getElementById("c");
+
+        for (let i = 1; i <= 100; i++) {
+
+            let d = document.createElement("div");
+
+            d.className = "q";
+
+            d.id = "q" + i;
+
+            d.innerHTML = `
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<div>
+<b>Q${i}</b>
+${[1,2,3,4].map(v=>`
+<label class="opt"><input type="radio" name="a${i}" value="${v}"><span>${v}</span></label>
+`).join("")}
+</div>
+<div>
+<label class="opt"><input type="radio" name="r${i}" value="R"><span>✓</span></label>
+<label class="opt"><input type="radio" name="r${i}" value="W"><span>✗</span></label>
+</div>
+</div>`;
+
+            c.appendChild(d);
+
+            d.querySelectorAll("input").forEach(inp => {
+
+                if (st[inp.name] == inp.value){
+                    inp.checked = true;
+                    inp.dataset.checked = "true";
+                }
+
+                inp.onclick = function () {
+
+                    if (this.dataset.checked === "true") {
+                        this.checked = false;
+                        this.dataset.checked = "false";
+                        delete st[this.name];
+                        localStorage.omr = JSON.stringify(st);
+                        paint(i);
+                        return;
+                    }
+
+                    document.querySelectorAll('input[name="'+this.name+'"]').forEach(r=>r.dataset.checked="false");
+                    this.dataset.checked="true";
+                    st[this.name]=this.value;
+                    localStorage.omr=JSON.stringify(st);
+                    paint(i);
+                };
+
+            });
+
+            paint(i);
+
+        }
+
+        function paint(i) {
+
+            document.getElementById("q" + i).className =
+                "q" + (st["a" + i] ? " attempt" : "");
+
+        }
+
+        function go() {
+
+            let n = s.value;
+
+            if (n)
+                document.getElementById("q" + n).scrollIntoView();
+
+        }
+
+        
+let historyData=JSON.parse(localStorage.omrHistory||"[]");
+function saveHistory(a,r,w,not,acc){
+ historyData.push({test:historyData.length+1,date:new Date().toLocaleDateString('en-GB'),attempted:a,right:r,wrong:w,not:not,accuracy:acc+"%"});
+ localStorage.omrHistory=JSON.stringify(historyData);
+}
+
+
+function historyView(){
+ document.body.insertAdjacentHTML('beforeend',`<div class="password-overlay" id="pwdBox"><div class="password-box"><h3>History Login</h3><input type="password" id="hpwd" placeholder="Enter Password"><br><button onclick="checkHistoryPassword()">Open History</button><p id="perr" style="color:red"></p></div></div>`);
+}
+function checkHistoryPassword(){
+ if(document.getElementById('hpwd').value!=="5969"){document.getElementById('perr').innerText="Wrong Password";return;}
+ document.getElementById('pwdBox').remove();
+ let h=JSON.parse(localStorage.omrHistory||"[]");
+ let html=`<h2>History</h2><table border="1" cellpadding="6"><tr><th>Test</th><th>Date</th><th>Attempted</th><th>Right</th><th>Wrong</th><th>Not</th><th>Accuracy</th><th>Action</th></tr>`;
+ h.forEach((x,i)=>html+=`<tr><td>${x.test}</td><td>${x.date}</td><td>${x.attempted}</td><td>${x.right}</td><td>${x.wrong}</td><td>${x.not}</td><td>${x.accuracy}</td><td><button onclick="deleteHistory(${i})">Delete</button></td></tr>`);
+ html+="</table><br><button onclick='location.reload()'>Back</button>";
+ document.body.innerHTML=html;
+}
+
+function deleteHistory(i){
+ let h=JSON.parse(localStorage.omrHistory||"[]");
+ h.splice(i,1);
+ h.forEach((e,idx)=>e.test=idx+1);
+ localStorage.omrHistory=JSON.stringify(h);
+ historyView();
+}
+
+
+function calc() {
+
+            let a = 0, r = 0, w = 0;
+
+            for (let i = 1; i <= 100; i++) {
+
+                if (st["a" + i]) a++;
+
+                if (st["r" + i] == "R") r++;
+
+                if (st["r" + i] == "W") w++;
+
+            }
+
+            let not = 100 - a;
+
+            let acc = a ? ((r / a) * 100).toFixed(2) : 0;
+
+            rAttempt.innerText = a;
+
+            rRight.innerText = r;
+
+            rWrong.innerText = w;
+
+            rNot.innerText = not;
+
+            rAccuracy.innerText = acc + "%";
+
+            
+            resultModal.style.display = "block";
+
+        }
+
+        function closeModal() {
+
+            resultModal.style.display = "none";
+
+        }
+
+        window.onclick = function (e) {
+
+            if (e.target == resultModal)
+
+                closeModal();
+
+        }
+
+        function clr() {
+            if (confirm("Clear?")) {
+                let a=0,r=0,w=0;
+                for(let i=1;i<=100;i++){ if(st["a"+i]) a++; if(st["r"+i]=="R") r++; if(st["r"+i]=="W") w++; }
+                let not=100-a;
+                let acc=a?((r/a)*100).toFixed(2):0;
+                saveHistory(a,r,w,not,acc);
+                localStorage.removeItem("omr");
+                location.reload();
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>
