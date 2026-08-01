@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OMR</title>
 
     <style>
@@ -99,30 +99,108 @@
             color: white;
             border-color: #2196F3;
         }
-        
-    
-.password-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999}
-.password-box{background:#fff;padding:20px;border-radius:10px;width:320px;text-align:center}
-.password-box input{width:90%;padding:10px;margin:10px 0}
 
 
-.top{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:8px}
-.top>div,.bar{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
-button{padding:8px 12px;font-size:16px}
-#s{width:60px}
-.opt{display:inline-block;margin-right:6px}
-.opt span{width:50px;height:50px;font-size:22px}
-.opt:nth-child(4){margin-right:15px}
-@media(max-width:768px){
-.top{flex-wrap:nowrap;overflow-x:auto}
-.top>div,.bar{flex-wrap:nowrap}
-.q>div{display:flex!important;justify-content:space-between;align-items:center!important;flex-wrap:nowrap!important}
-.opt span{width:50px;height:50px;font-size:22px}
-.opt{margin-right:6px}
-.opt:nth-child(4){margin-right:15px}
-}
+        .password-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999
+        }
 
-</style>
+        .password-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 320px;
+            text-align: center
+        }
+
+        .password-box input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0
+        }
+
+
+        .top {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px
+        }
+
+        .top>div,
+        .bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap
+        }
+
+        button {
+            padding: 8px 12px;
+            font-size: 16px
+        }
+
+        #s {
+            width: 60px
+        }
+
+        .opt {
+            display: inline-block;
+            margin-right: 6px
+        }
+
+        .opt span {
+            width: 50px;
+            height: 50px;
+            font-size: 22px
+        }
+
+        .opt:nth-child(4) {
+            margin-right: 6px
+        }
+
+        @media(max-width:768px) {
+            .top {
+                flex-wrap: nowrap;
+
+
+            }
+
+            .top>div,
+            .bar {
+                flex-wrap: nowrap;
+
+            }
+
+            .q>div {
+                display: flex !important;
+                justify-content: space-between;
+                align-items: center !important;
+                flex-wrap: nowrap !important
+            }
+
+            .opt span {
+                width: 32px;
+                height: 32px;
+                font-size: 20px
+            }
+
+            .opt {
+                margin-right: 3px
+            }
+
+            .opt:nth-child(4) {
+                margin-right: 3px
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -136,14 +214,18 @@ button{padding:8px 12px;font-size:16px}
 
         <div class="bar">
             <button onclick="calc()">Calculate</button>
-            <button onclick="historyView()">History</button>
-            <button onclick="clr()">Clear</button>
+
         </div>
 
         <span id="res"></span>
     </div>
 
     <div id="c"></div>
+
+    <div style="text-align:center; margin:30px 0;">
+        <button onclick="historyView()">History</button>
+        <button onclick="clr()">Clear</button>
+    </div>
 
     <div id="resultModal" class="modal">
         <div class="modal-content">
@@ -185,7 +267,7 @@ button{padding:8px 12px;font-size:16px}
 <div style="display:flex;justify-content:space-between;align-items:center;">
 <div>
 <b>Q${i}</b>
-${[1,2,3,4].map(v=>`
+${[1, 2, 3, 4].map(v => `
 <label class="opt"><input type="radio" name="a${i}" value="${v}"><span>${v}</span></label>
 `).join("")}
 </div>
@@ -199,26 +281,43 @@ ${[1,2,3,4].map(v=>`
 
             d.querySelectorAll("input").forEach(inp => {
 
-                if (st[inp.name] == inp.value){
+                if (st[inp.name] == inp.value) {
                     inp.checked = true;
                     inp.dataset.checked = "true";
                 }
 
+
                 inp.onclick = function () {
+
+                    if (this.name.startsWith("r")) {
+                        let qNo=this.name.substring(1);
+                        let ans=document.querySelector('input[name="a'+qNo+'"]:checked');
+                        if(!ans){
+                            alert("Please select option (1,2,3 or 4) first.");
+                            this.checked=false;
+                            return;
+                        }
+                    }
+
 
                     if (this.dataset.checked === "true") {
                         this.checked = false;
                         this.dataset.checked = "false";
                         delete st[this.name];
+                        if (this.name.startsWith("a")) {
+                            let qNo=this.name.substring(1);
+                            document.querySelectorAll('input[name="r'+qNo+'"]').forEach(r=>{r.checked=false;r.dataset.checked="false";});
+                            delete st["r"+qNo];
+                        }
                         localStorage.omr = JSON.stringify(st);
                         paint(i);
                         return;
                     }
 
-                    document.querySelectorAll('input[name="'+this.name+'"]').forEach(r=>r.dataset.checked="false");
-                    this.dataset.checked="true";
-                    st[this.name]=this.value;
-                    localStorage.omr=JSON.stringify(st);
+                    document.querySelectorAll('input[name="' + this.name + '"]').forEach(r => r.dataset.checked = "false");
+                    this.dataset.checked = "true";
+                    st[this.name] = this.value;
+                    localStorage.omr = JSON.stringify(st);
                     paint(i);
                 };
 
@@ -244,37 +343,37 @@ ${[1,2,3,4].map(v=>`
 
         }
 
-        
-let historyData=JSON.parse(localStorage.omrHistory||"[]");
-function saveHistory(a,r,w,not,acc){
- historyData.push({test:historyData.length+1,date:new Date().toLocaleDateString('en-GB'),attempted:a,right:r,wrong:w,not:not,accuracy:acc+"%"});
- localStorage.omrHistory=JSON.stringify(historyData);
-}
+
+        let historyData = JSON.parse(localStorage.omrHistory || "[]");
+        function saveHistory(a, r, w, not, acc) {
+            historyData.push({ test: historyData.length + 1, date: new Date().toLocaleDateString('en-GB'), attempted: a, right: r, wrong: w, not: not, accuracy: acc + "%" });
+            localStorage.omrHistory = JSON.stringify(historyData);
+        }
 
 
-function historyView(){
- document.body.insertAdjacentHTML('beforeend',`<div class="password-overlay" id="pwdBox"><div class="password-box"><h3>History Login</h3><input type="password" id="hpwd" placeholder="Enter Password"><br><button onclick="checkHistoryPassword()">Open History</button><p id="perr" style="color:red"></p></div></div>`);
-}
-function checkHistoryPassword(){
- if(document.getElementById('hpwd').value!=="5969"){document.getElementById('perr').innerText="Wrong Password";return;}
- document.getElementById('pwdBox').remove();
- let h=JSON.parse(localStorage.omrHistory||"[]");
- let html=`<h2>History</h2><table border="1" cellpadding="6"><tr><th>Test</th><th>Date</th><th>Attempted</th><th>Right</th><th>Wrong</th><th>Not</th><th>Accuracy</th><th>Action</th></tr>`;
- h.forEach((x,i)=>html+=`<tr><td>${x.test}</td><td>${x.date}</td><td>${x.attempted}</td><td>${x.right}</td><td>${x.wrong}</td><td>${x.not}</td><td>${x.accuracy}</td><td><button onclick="deleteHistory(${i})">Delete</button></td></tr>`);
- html+="</table><br><button onclick='location.reload()'>Back</button>";
- document.body.innerHTML=html;
-}
+        function historyView() {
+            document.body.insertAdjacentHTML('beforeend', `<div class="password-overlay" id="pwdBox"><div class="password-box"><h3>History Login</h3><input type="password" id="hpwd" placeholder="Enter Password"><br><button onclick="checkHistoryPassword()">Open History</button><p id="perr" style="color:red"></p></div></div>`);
+        }
+        function checkHistoryPassword() {
+            if (document.getElementById('hpwd').value !== "5969") { document.getElementById('perr').innerText = "Wrong Password"; return; }
+            document.getElementById('pwdBox').remove();
+            let h = JSON.parse(localStorage.omrHistory || "[]");
+            let html = `<h2>History</h2><table border="1" cellpadding="6"><tr><th>Test</th><th>Date</th><th>Attempted</th><th>Right</th><th>Wrong</th><th>Not</th><th>Accuracy</th><th>Action</th></tr>`;
+            h.forEach((x, i) => html += `<tr><td>${x.test}</td><td>${x.date}</td><td>${x.attempted}</td><td>${x.right}</td><td>${x.wrong}</td><td>${x.not}</td><td>${x.accuracy}</td><td><button onclick="deleteHistory(${i})">Delete</button></td></tr>`);
+            html += "</table><br><button onclick='location.reload()'>Back</button>";
+            document.body.innerHTML = html;
+        }
 
-function deleteHistory(i){
- let h=JSON.parse(localStorage.omrHistory||"[]");
- h.splice(i,1);
- h.forEach((e,idx)=>e.test=idx+1);
- localStorage.omrHistory=JSON.stringify(h);
- historyView();
-}
+        function deleteHistory(i) {
+            let h = JSON.parse(localStorage.omrHistory || "[]");
+            h.splice(i, 1);
+            h.forEach((e, idx) => e.test = idx + 1);
+            localStorage.omrHistory = JSON.stringify(h);
+            historyView();
+        }
 
 
-function calc() {
+        function calc() {
 
             let a = 0, r = 0, w = 0;
 
@@ -302,7 +401,7 @@ function calc() {
 
             rAccuracy.innerText = acc + "%";
 
-            
+
             resultModal.style.display = "block";
 
         }
@@ -323,11 +422,11 @@ function calc() {
 
         function clr() {
             if (confirm("Clear?")) {
-                let a=0,r=0,w=0;
-                for(let i=1;i<=100;i++){ if(st["a"+i]) a++; if(st["r"+i]=="R") r++; if(st["r"+i]=="W") w++; }
-                let not=100-a;
-                let acc=a?((r/a)*100).toFixed(2):0;
-                saveHistory(a,r,w,not,acc);
+                let a = 0, r = 0, w = 0;
+                for (let i = 1; i <= 100; i++) { if (st["a" + i]) a++; if (st["r" + i] == "R") r++; if (st["r" + i] == "W") w++; }
+                let not = 100 - a;
+                let acc = a ? ((r / a) * 100).toFixed(2) : 0;
+                saveHistory(a, r, w, not, acc);
                 localStorage.removeItem("omr");
                 location.reload();
 
