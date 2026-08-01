@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OMR</title>
 
     <style>
@@ -103,6 +104,23 @@
 .password-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999}
 .password-box{background:#fff;padding:20px;border-radius:10px;width:320px;text-align:center}
 .password-box input{width:90%;padding:10px;margin:10px 0}
+
+
+.top{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:8px}
+.top>div,.bar{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+button{padding:8px 12px;font-size:16px}
+#s{width:60px}
+.opt{display:inline-block;margin-right:6px}
+.opt span{width:50px;height:50px;font-size:22px}
+.opt:nth-child(4){margin-right:15px}
+@media(max-width:768px){
+.top{flex-wrap:nowrap;overflow-x:auto}
+.top>div,.bar{flex-wrap:nowrap}
+.q>div{display:flex!important;justify-content:space-between;align-items:center!important;flex-wrap:nowrap!important}
+.opt span{width:50px;height:50px;font-size:22px}
+.opt{margin-right:6px}
+.opt:nth-child(4){margin-right:15px}
+}
 
 </style>
 </head>
