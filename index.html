@@ -213,7 +213,7 @@
         </div>
 
         <div class="bar">
-            <button onclick="calc()">Calculate</button>
+            <button onclick="clr()">Submit</button>
 
         </div>
 
@@ -224,7 +224,7 @@
 
     <div style="text-align:center; margin:30px 0;">
         <button onclick="historyView()">History</button>
-        <button onclick="clr()">Clear</button>
+        
     </div>
 
     <div id="resultModal" class="modal">
@@ -244,7 +244,7 @@
 
             <p>Accuracy : <b id="rAccuracy"></b></p>
 
-            <button onclick="closeModal()">Close</button>
+            <button onclick="finalSubmit()">OK</button>
 
         </div>
     </div>
@@ -295,7 +295,7 @@ ${[1, 2, 3, 4].map(v => `
                         let qNo = this.name.substring(1);
                         let ans = document.querySelector('input[name="a' + qNo + '"]:checked');
                         if (!ans) {
-                            alert("Please select option (1,2,3 or 4) first.");
+                            alert("कृपया या प्रश्नाचे ऑप्शन टिक करा.");
                             this.checked = false;
                             return;
                         }
@@ -437,11 +437,36 @@ ${[1, 2, 3, 4].map(v => `
 
         }
 
-        function clr(){document.getElementById("clearModal").style.display="block";}
+        function clr(){
+let incompleteQuestions=[];
+for(let i=1;i<=100;i++){
+ if(st["a"+i] && !st["r"+i]) incompleteQuestions.push(i);
+}
+if(incompleteQuestions.length>0){
+ alert("तुम्ही खालील प्रश्नांचे Right (✓) किंवा Wrong (✗) निवडलेले नाही:\n\nQ"+incompleteQuestions.join(", Q"));
+ return;
+}
+document.getElementById("clearModal").style.display="block";
+}
 function closeClearModal(){document.getElementById("clearModal").style.display="none";}
-function submitClear(){let name=document.getElementById("studentName").value.trim(); if(!name){alert("Please Enter Your Name");return;} if(name.length<3){alert("Name must be at least 3 characters");return;} if(name.length>10){alert("Name must be maximum 10 characters");return;} let a=0,r=0,w=0; for(let i=1;i<=100;i++){if(st["a"+i])a++; if(st["r"+i]=="R")r++; if(st["r"+i]=="W")w++;} let not=100-a; let acc=a?((r/a)*100).toFixed(2):0; saveHistory(name,a,r,w,not,acc); localStorage.removeItem("omr"); location.reload();}
+let pendingResult=null;
+function submitClear(){let name=document.getElementById("studentName").value.trim(); if(!name){alert("Please Enter Your Name");return;} if(name.length<3){alert("Name must be at least 3 characters");return;} if(name.length>10){alert("Name must be maximum 10 characters");return;} let a=0,r=0,w=0; for(let i=1;i<=100;i++){if(st["a"+i])a++; if(st["r"+i]=="R")r++; if(st["r"+i]=="W")w++;} let not=100-a; let acc=a?((r/a)*100).toFixed(2):0; pendingResult={name,a,r,w,not,acc}; closeClearModal(); rAttempt.innerText=a; rRight.innerText=r; rWrong.innerText=w; rNot.innerText=not; rAccuracy.innerText=acc+"%"; resultModal.style.display="block";}
+function finalSubmit(){ if(pendingResult){ saveHistory(pendingResult.name,pendingResult.a,pendingResult.r,pendingResult.w,pendingResult.not,pendingResult.acc);} localStorage.removeItem("omr"); location.reload(); }
 
-    </script>
+    
+document.addEventListener('DOMContentLoaded',function(){
+ const studentInput=document.getElementById('studentName');
+ if(studentInput){
+   studentInput.addEventListener('keypress',function(e){
+     if(e.key==='Enter'){
+       e.preventDefault();
+       submitClear();
+     }
+   });
+ }
+});
+
+</script>
 
 </body>
 
